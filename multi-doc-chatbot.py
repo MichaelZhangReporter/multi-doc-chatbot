@@ -1,4 +1,5 @@
 import os
+import gradio as gr
 import sys
 from dotenv import load_dotenv
 from langchain.chains import ConversationalRetrievalChain
@@ -43,23 +44,25 @@ pdf_qa = ConversationalRetrievalChain.from_llm(
     return_source_documents=True,
     verbose=False
 )
-
-yellow = "\033[0;33m"
-green = "\033[0;32m"
-white = "\033[0;39m"
-
 chat_history = []
-print(f"{yellow}---------------------------------------------------------------------------------")
-print('Welcome to the DocBot. You are now ready to start interacting with your documents')
-print('---------------------------------------------------------------------------------')
-while True:
-    query = input(f"{green}Prompt: ")
-    if query == "exit" or query == "quit" or query == "q" or query == "f":
-        print('Exiting')
-        sys.exit()
-    if query == '':
-        continue
+
+
+def main():
+    demo = gr.Interface(fn=greet, inputs="text", outputs="text")
+    demo.launch(share=True)
+
+
+def greet(name):
     result = pdf_qa.invoke(
-        {"question": query, "chat_history": chat_history})
-    print(f"{white}Answer: " + result["answer"])
-    chat_history.append((query, result["answer"]))
+        {"question": name, "chat_history": chat_history})
+    return_str = "Answer: " + result["answer"] + "\n" + "\n" + "\n"
+    chat_history.append((name, result["answer"]))
+    return_str = return_str + "Similarity Search Results:" + "\n" + "\n"
+    similarity_search = vectordb.similarity_search(name)
+    for ele in similarity_search:
+        return_str = return_str + str(ele) + "\n" + "\n" + "\n"
+    return return_str
+
+
+if __name__ == "__main__":
+    main()
